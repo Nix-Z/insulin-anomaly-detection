@@ -1,0 +1,27 @@
+pipeline{
+    agent any
+
+    stages{
+        stage("Extract Data"){
+            steps{
+                sh 'python3 data_extraction.py'
+            }
+        }
+        stage("Data Analysis"){
+            steps{
+                sh 'python3 data_analysis.py'
+            }
+        }
+        stage("Data Visualization"){
+            steps{
+                sh 'python3 datavisualization.py'
+            }
+        }
+    }
+    post{
+       
+        always {
+            archiveArtifacts artifacts: 'diabetes_new_data.csv', onlyIfSuccessful: true
+        }
+            }
+}
