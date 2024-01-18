@@ -89,7 +89,8 @@ def visualize_data():
     fig_6.update_xaxes(showgrid=False)
     fig_6.update_yaxes(showgrid=False)
     fig_6.show()
-    
+
+    data.to_csv('diabetes_new_data.csv', index=False)
     return data
 
 visualize_data()
