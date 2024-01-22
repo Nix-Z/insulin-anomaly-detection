@@ -18,21 +18,32 @@ def visualize_data():
     fig_1.show()
 
     feature = 'Insulin'
-    X = data[feature].values
     
-    # Anamoly detection via Robust Covariance
-    model = EllipticEnvelope(random_state=1)
-    predictions = model.fit_predict(X.reshape(-1,1))
-    data['Status'] = predictions
-    print(data['Status'].value_counts().sort_values(ascending=False))
+    percentile_25 = data[feature].quantile(0.25)
+    percentile_75 = data[feature].quantile(0.75)
+    iqr = percentile_75 - percentile_25
+    upper_limit = percentile_75 + 1.5 * iqr
+    lower_limit = percentile_25 - 1.5 * iqr
 
-    data.replace({'Status': {-1:'outlier', 1:'inlier'}}, inplace=True)
+    data['Check_Outliers'] = np.nan
 
-    # Graph Robust Covariance results
-    fig_2 = px.scatter(data, y=data[feature], color="Status", title="Outliers Detected via Robust Covariance Algorithm")
+    for index in range(len(data)): #Wrong but on the right path?
+        if lower_limit > data.loc[index, feature] or upper_limit < data.loc[index, feature]:
+            data.loc[index, 'Check_Outliers'] = -1
+        else:
+            data.loc[index, 'Check_Outliers'] = 1
+    
+    data['Check_Outliers'] = data['Check_Outliers'].astype(int)
+    print(data['Check_Outliers'].value_counts().sort_values(ascending=False))
+    data.replace({'Check_Outliers': {-1:'outlier', 1:'inlier'}}, inplace=True)
+
+    # Graph IQR Method results
+    fig_2 = px.scatter(data, y=data[feature], color="Check_Outliers", title="Outliers Detected via IQR Method")
     fig_2.update_xaxes(showgrid=False)
     fig_2.update_yaxes(showgrid=False)
     fig_2.show()
+    
+    X = data[feature].values
     
     # Anamoly detection via IsolationForest
     model = IsolationForest(random_state=1)
@@ -90,9 +101,20 @@ def visualize_data():
     fig_6.update_yaxes(showgrid=False)
     fig_6.show()
 
-    data.to_csv('diabetes_new_data.csv', index=False)
+    # Anamoly detection via Robust Covariance
+    model = EllipticEnvelope(random_state=1)
+    predictions = model.fit_predict(X.reshape(-1,1))
+    data['Status'] = predictions
+    print(data['Status'].value_counts().sort_values(ascending=False))
+
+    data.replace({'Status': {-1:'outlier', 1:'inlier'}}, inplace=True)
+
+    # Graph Robust Covariance results
+    fig_7 = px.scatter(data, y=data[feature], color="Status", title="Outliers Detected via Robust Covariance Algorithm")
+    fig_7.update_xaxes(showgrid=False)
+    fig_7.update_yaxes(showgrid=False)
+    fig_7.show()
+    
     return data
 
 visualize_data()
-    
-    
